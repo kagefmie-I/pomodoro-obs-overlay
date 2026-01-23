@@ -63,6 +63,10 @@ let timerState = {
 
 let timerInterval = null;
 
+// Cross-tab synchronization
+let broadcastChannel = null;
+let syncPollInterval = null;
+
 // ========================================
 // DOM Elements
 // ========================================
@@ -139,7 +143,16 @@ function getPhaseDuration(phase) {
 
 function saveSettings() {
   try {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    const settingsString = JSON.stringify(settings);
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, settingsString);
+    
+    // Broadcast change to other tabs/windows
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'settingsUpdate',
+        settings: settings
+      });
+    }
   } catch (e) {
     console.warn('Failed to save settings:', e);
   }
@@ -160,7 +173,23 @@ function loadSettings() {
 
 function saveTimerState() {
   try {
-    localStorage.setItem(STORAGE_KEYS.TIMER_STATE, JSON.stringify(timerState));
+    const stateString = JSON.stringify(timerState);
+    localStorage.setItem(STORAGE_KEYS.TIMER_STATE, stateString);
+    
+    // Broadcast change to other tabs/windows
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'timerStateUpdate',
+        state: timerState
+      });
+    }
+    
+    // Trigger storage event manually (for same-origin listeners)
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: STORAGE_KEYS.TIMER_STATE,
+      newValue: stateString,
+      storageArea: localStorage
+    }));
   } catch (e) {
     console.warn('Failed to save timer state:', e);
   }
@@ -206,6 +235,116 @@ function clearAllData() {
   } catch (e) {
     console.warn('Failed to clear data:', e);
   }
+}
+
+// ========================================
+// Cross-Tab Synchronization
+// ========================================
+
+function syncTimerStateFromStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.TIMER_STATE);
+    if (!saved) return;
+    
+    const parsed = JSON.parse(saved);
+    
+    // Only sync if the saved state is different
+    if (JSON.stringify(timerState) !== JSON.stringify(parsed)) {
+      const wasRunning = timerState.isRunning;
+      const oldPhase = timerState.phase;
+      
+      timerState = {
+        phase: parsed.phase || PHASE.STUDY,
+        currentSession: parsed.currentSession || 1,
+        secondsRemaining: parsed.secondsRemaining ?? (settings.studyDuration * 60),
+        isRunning: parsed.isRunning || false,
+        lastTick: parsed.lastTick || null
+      };
+      
+      // If timer was running, recalculate remaining time
+      if (timerState.isRunning && timerState.lastTick) {
+        const now = Date.now();
+        const elapsed = Math.floor((now - timerState.lastTick) / 1000);
+        timerState.secondsRemaining = Math.max(0, timerState.secondsRemaining - elapsed);
+      }
+      
+      // Restart timer if it should be running
+      if (timerState.isRunning && !wasRunning) {
+        timerState.lastTick = Date.now();
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(tick, 1000);
+      } else if (!timerState.isRunning && wasRunning) {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
+      
+      // Update display
+      updateTimerDisplay();
+      
+      // Trigger animation if phase changed
+      if (oldPhase !== timerState.phase) {
+        triggerPhaseChangeAnimation();
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to sync timer state:', e);
+  }
+}
+
+function syncSettingsFromStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    if (!saved) return;
+    
+    const parsed = JSON.parse(saved);
+    
+    // Only sync if settings changed
+    if (JSON.stringify(settings) !== JSON.stringify(parsed)) {
+      settings = { ...DEFAULT_SETTINGS, ...parsed };
+      updateSettingsUI();
+      updateGlassMode();
+      updateObsUrlPreview();
+      
+      // If timer is not running, update display
+      if (!timerState.isRunning) {
+        updateTimerDisplay();
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to sync settings:', e);
+  }
+}
+
+function setupSync() {
+  // Use BroadcastChannel API if available (modern browsers)
+  if (typeof BroadcastChannel !== 'undefined') {
+    broadcastChannel = new BroadcastChannel('pomodoro-timer-sync');
+    
+    broadcastChannel.onmessage = (event) => {
+      if (event.data.type === 'timerStateUpdate') {
+        syncTimerStateFromStorage();
+      } else if (event.data.type === 'settingsUpdate') {
+        syncSettingsFromStorage();
+      }
+    };
+  }
+  
+  // Listen for storage events (works across tabs in same browser)
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEYS.TIMER_STATE) {
+      syncTimerStateFromStorage();
+    } else if (e.key === STORAGE_KEYS.SETTINGS) {
+      syncSettingsFromStorage();
+    }
+  });
+  
+  // Poll localStorage as fallback (for OBS Browser Source which may not support events)
+  syncPollInterval = setInterval(() => {
+    syncTimerStateFromStorage();
+    syncSettingsFromStorage();
+  }, 500); // Check every 500ms
 }
 
 // ========================================
@@ -810,8 +949,19 @@ function init() {
   updateObsUrlPreview();
   
   setupEventListeners();
+  setupSync();
   
   console.log('Pomodoro Timer initialized', isOverlay ? '(overlay mode)' : '(full mode)');
 }
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (syncPollInterval) {
+    clearInterval(syncPollInterval);
+  }
+  if (broadcastChannel) {
+    broadcastChannel.close();
+  }
+});
 
 document.addEventListener('DOMContentLoaded', init);

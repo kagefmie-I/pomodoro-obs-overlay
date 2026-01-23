@@ -115,24 +115,6 @@ The overlay changes color based on the current phase:
 
 ---
 
-## 🖥️ Running Locally
-
-If you want to run this locally instead of using GitHub Pages:
-
-### Using Python
-```bash
-python -m http.server 8000
-```
-
-### Using Node.js
-```bash
-npx serve .
-```
-
-Then open `http://localhost:8000` in your browser.
-
----
-
 ## 💾 Data Persistence
 
 Your settings and timer state are saved in your browser's localStorage:

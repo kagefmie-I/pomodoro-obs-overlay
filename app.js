@@ -173,8 +173,19 @@ function loadSettings() {
 
 function saveTimerState() {
   try {
-    const stateString = JSON.stringify(timerState);
+    // Add a sync timestamp to help with cross-context synchronization
+    const stateWithTimestamp = {
+      ...timerState,
+      _syncTimestamp: Date.now(),
+      _syncVersion: (timerState._syncVersion || 0) + 1
+    };
+    
+    const stateString = JSON.stringify(stateWithTimestamp);
     localStorage.setItem(STORAGE_KEYS.TIMER_STATE, stateString);
+    
+    // Also save to a separate sync key for better cross-context access
+    localStorage.setItem('pomodoro_sync_heartbeat', Date.now().toString());
+    localStorage.setItem('pomodoro_sync_state', stateString);
     
     // Broadcast change to other tabs/windows
     if (broadcastChannel) {
@@ -258,10 +269,24 @@ function clearAllData() {
 
 function syncTimerStateFromStorage() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEYS.TIMER_STATE);
+    // Try multiple storage keys for better cross-context compatibility
+    let saved = localStorage.getItem(STORAGE_KEYS.TIMER_STATE) || 
+                localStorage.getItem('pomodoro_sync_state');
+    
     if (!saved) return;
     
     const parsed = JSON.parse(saved);
+    
+    // Check heartbeat to see if state is fresh (within last 5 seconds)
+    const heartbeat = parseInt(localStorage.getItem('pomodoro_sync_heartbeat') || '0', 10);
+    const now = Date.now();
+    const heartbeatAge = now - heartbeat;
+    
+    // If heartbeat is too old (more than 5 seconds), state might be stale
+    if (heartbeatAge > 5000 && parsed.isRunning) {
+      // State might be stale, but still try to sync
+      console.log('Warning: Heartbeat is stale, state may be outdated');
+    }
     
     // Validate parsed state
     let currentSession = parsed.currentSession || 1;
@@ -277,22 +302,24 @@ function syncTimerStateFromStorage() {
       currentSession: currentSession,
       secondsRemaining: parsed.secondsRemaining ?? (settings.studyDuration * 60),
       isRunning: parsed.isRunning || false,
-      lastTick: parsed.lastTick || null
+      lastTick: parsed.lastTick || null,
+      _syncTimestamp: parsed._syncTimestamp || now,
+      _syncVersion: parsed._syncVersion || 0
     };
     
     // If timer is running, recalculate remaining time based on elapsed time
     if (newState.isRunning && newState.lastTick) {
-      const now = Date.now();
       const elapsed = Math.floor((now - newState.lastTick) / 1000);
       newState.secondsRemaining = Math.max(0, newState.secondsRemaining - elapsed);
     }
     
-    // Check if state actually changed (compare key fields)
+    // Check if state actually changed (compare key fields and sync version)
     const stateChanged = 
       timerState.phase !== newState.phase ||
       timerState.currentSession !== newState.currentSession ||
       Math.abs(timerState.secondsRemaining - newState.secondsRemaining) > 1 || // Allow 1 second difference
-      timerState.isRunning !== newState.isRunning;
+      timerState.isRunning !== newState.isRunning ||
+      (newState._syncVersion && (timerState._syncVersion || 0) < newState._syncVersion);
     
     if (stateChanged) {
       const wasRunning = timerState.isRunning;
@@ -305,11 +332,13 @@ function syncTimerStateFromStorage() {
         timerState.lastTick = Date.now();
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(tick, 1000);
+        console.log('Timer started via sync');
       } else if (!timerState.isRunning && wasRunning) {
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
         }
+        console.log('Timer stopped via sync');
       } else if (timerState.isRunning && wasRunning) {
         // Timer is running, update lastTick to current time to prevent drift
         timerState.lastTick = Date.now();
@@ -376,11 +405,22 @@ function setupSync() {
   });
   
   // Poll localStorage as fallback (for OBS Browser Source which may not support events)
-  // Use more frequent polling for OBS Browser Source compatibility
+  // Use very frequent polling for OBS Browser Source compatibility (isolated storage)
   syncPollInterval = setInterval(() => {
     syncTimerStateFromStorage();
     syncSettingsFromStorage();
-  }, 200); // Check every 200ms for better responsiveness
+  }, 100); // Check every 100ms for maximum responsiveness
+  
+  // Also write heartbeat more frequently when timer is running
+  setInterval(() => {
+    if (timerState.isRunning) {
+      try {
+        localStorage.setItem('pomodoro_sync_heartbeat', Date.now().toString());
+      } catch (e) {
+        // Ignore errors
+      }
+    }
+  }, 500); // Update heartbeat every 500ms when running
 }
 
 // ========================================
@@ -535,7 +575,14 @@ function tick() {
     timerState.secondsRemaining = 0;
   }
   
+  // Save state and update heartbeat on every tick for better sync
   saveTimerState();
+  try {
+    localStorage.setItem('pomodoro_sync_heartbeat', Date.now().toString());
+  } catch (e) {
+    // Ignore errors
+  }
+  
   updateTimerDisplay();
 }
 
@@ -1012,6 +1059,11 @@ function init() {
   console.log('Settings:', settings);
   console.log('Timer State:', timerState);
   console.log('URL Params:', window.location.search);
+  
+  if (isOverlay) {
+    console.log('⚠️ Overlay mode: If timer doesn\'t sync, OBS Browser Source may have isolated storage.');
+    console.log('💡 Solution: Open control panel in the same browser window, or refresh OBS overlay after starting timer.');
+  }
 }
 
 // Cleanup on page unload

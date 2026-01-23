@@ -200,13 +200,28 @@ function loadTimerState() {
     const saved = localStorage.getItem(STORAGE_KEYS.TIMER_STATE);
     if (saved) {
       const parsed = JSON.parse(saved);
+      
+      // Validate and fix invalid state
+      let currentSession = parsed.currentSession || 1;
+      if (currentSession > settings.totalSessions) {
+        currentSession = 1;
+      }
+      if (currentSession < 1) {
+        currentSession = 1;
+      }
+      
       timerState = {
         phase: parsed.phase || PHASE.STUDY,
-        currentSession: parsed.currentSession || 1,
+        currentSession: currentSession,
         secondsRemaining: parsed.secondsRemaining ?? (settings.studyDuration * 60),
         isRunning: parsed.isRunning || false,
         lastTick: parsed.lastTick || null
       };
+      
+      // Ensure seconds remaining is valid for current phase
+      if (timerState.secondsRemaining < 0) {
+        timerState.secondsRemaining = getPhaseDuration(timerState.phase);
+      }
     } else {
       timerState = {
         phase: PHASE.STUDY,
@@ -248,25 +263,42 @@ function syncTimerStateFromStorage() {
     
     const parsed = JSON.parse(saved);
     
-    // Only sync if the saved state is different
-    if (JSON.stringify(timerState) !== JSON.stringify(parsed)) {
+    // Validate parsed state
+    let currentSession = parsed.currentSession || 1;
+    if (currentSession > settings.totalSessions) {
+      currentSession = 1;
+    }
+    if (currentSession < 1) {
+      currentSession = 1;
+    }
+    
+    const newState = {
+      phase: parsed.phase || PHASE.STUDY,
+      currentSession: currentSession,
+      secondsRemaining: parsed.secondsRemaining ?? (settings.studyDuration * 60),
+      isRunning: parsed.isRunning || false,
+      lastTick: parsed.lastTick || null
+    };
+    
+    // If timer is running, recalculate remaining time based on elapsed time
+    if (newState.isRunning && newState.lastTick) {
+      const now = Date.now();
+      const elapsed = Math.floor((now - newState.lastTick) / 1000);
+      newState.secondsRemaining = Math.max(0, newState.secondsRemaining - elapsed);
+    }
+    
+    // Check if state actually changed (compare key fields)
+    const stateChanged = 
+      timerState.phase !== newState.phase ||
+      timerState.currentSession !== newState.currentSession ||
+      Math.abs(timerState.secondsRemaining - newState.secondsRemaining) > 1 || // Allow 1 second difference
+      timerState.isRunning !== newState.isRunning;
+    
+    if (stateChanged) {
       const wasRunning = timerState.isRunning;
       const oldPhase = timerState.phase;
       
-      timerState = {
-        phase: parsed.phase || PHASE.STUDY,
-        currentSession: parsed.currentSession || 1,
-        secondsRemaining: parsed.secondsRemaining ?? (settings.studyDuration * 60),
-        isRunning: parsed.isRunning || false,
-        lastTick: parsed.lastTick || null
-      };
-      
-      // If timer was running, recalculate remaining time
-      if (timerState.isRunning && timerState.lastTick) {
-        const now = Date.now();
-        const elapsed = Math.floor((now - timerState.lastTick) / 1000);
-        timerState.secondsRemaining = Math.max(0, timerState.secondsRemaining - elapsed);
-      }
+      timerState = newState;
       
       // Restart timer if it should be running
       if (timerState.isRunning && !wasRunning) {
@@ -278,6 +310,9 @@ function syncTimerStateFromStorage() {
           clearInterval(timerInterval);
           timerInterval = null;
         }
+      } else if (timerState.isRunning && wasRunning) {
+        // Timer is running, update lastTick to current time to prevent drift
+        timerState.lastTick = Date.now();
       }
       
       // Update display
@@ -341,10 +376,11 @@ function setupSync() {
   });
   
   // Poll localStorage as fallback (for OBS Browser Source which may not support events)
+  // Use more frequent polling for OBS Browser Source compatibility
   syncPollInterval = setInterval(() => {
     syncTimerStateFromStorage();
     syncSettingsFromStorage();
-  }, 500); // Check every 500ms
+  }, 200); // Check every 200ms for better responsiveness
 }
 
 // ========================================
@@ -796,6 +832,7 @@ function checkOverlayMode() {
 function parseUrlParams() {
   const urlParams = new URLSearchParams(window.location.search);
   let hasOverrides = false;
+  const oldSettings = { ...settings };
   
   for (const [param, config] of Object.entries(URL_PARAM_CONFIG)) {
     const value = urlParams.get(param);
@@ -820,7 +857,27 @@ function parseUrlParams() {
     }
   }
   
+  // If critical settings changed, reset timer state
   if (hasOverrides) {
+    const settingsChanged = 
+      oldSettings.totalSessions !== settings.totalSessions ||
+      oldSettings.studyDuration !== settings.studyDuration ||
+      oldSettings.shortBreakDuration !== settings.shortBreakDuration ||
+      oldSettings.longBreakDuration !== settings.longBreakDuration ||
+      oldSettings.longBreakEvery !== settings.longBreakEvery;
+    
+    if (settingsChanged) {
+      // Reset timer to match new settings
+      timerState = {
+        phase: PHASE.STUDY,
+        currentSession: 1,
+        secondsRemaining: settings.studyDuration * 60,
+        isRunning: false,
+        lastTick: null
+      };
+      saveTimerState();
+    }
+    
     saveSettings();
   }
 }
@@ -939,8 +996,8 @@ function init() {
   const isOverlay = checkOverlayMode();
   
   loadSettings();
-  parseUrlParams();
-  loadTimerState();
+  parseUrlParams(); // This may reset timer state if settings changed
+  loadTimerState(); // Load after URL params are applied
   resumeFromSavedState();
   
   updateSettingsUI();
@@ -952,6 +1009,9 @@ function init() {
   setupSync();
   
   console.log('Pomodoro Timer initialized', isOverlay ? '(overlay mode)' : '(full mode)');
+  console.log('Settings:', settings);
+  console.log('Timer State:', timerState);
+  console.log('URL Params:', window.location.search);
 }
 
 // Cleanup on page unload

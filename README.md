@@ -1,67 +1,168 @@
-# Pomodoro Timer - OBS Overlay
+# 🍅 Pomodoro OBS Overlay
 
-A lightweight, persistent pomodoro timer designed for Twitch streaming and OBS Browser Sources.
+A sleek, lightweight Pomodoro timer designed as an OBS Browser Source overlay for Twitch/YouTube streamers. Features a modern glassmorphism design, persistent state, and easy customization via URL parameters.
 
-## Features
+<!-- Replace with your actual GitHub Pages URL -->
+## 🚀 Live Demo
 
-- Configurable study sessions (1-20)
-- Configurable study/break durations
-- Short and long break support with customizable frequency
-- Persistent state across page refreshes and OBS reloads
-- Full mode (settings + controls) and Overlay mode (timer only)
-- Transparent background for OBS
-- Modern glassmorphism design with phase-specific colors
+**Full UI (Control Panel):**  
+`https://bskasan.github.io/pomodoro-obs-overlay/`
 
-## Running Locally
+**OBS Overlay (Timer Only):**  
+`https://bskasan.github.io/pomodoro-obs-overlay/?mode=overlay`
 
-### Option 1: Direct File Open
-Simply open `index.html` in your browser. Works for basic testing.
+---
 
-### Option 2: Local Server (Recommended for OBS)
-Using Python:
+## ✨ Features
+
+- 🎯 **Configurable sessions** - Set 1-20 study sessions
+- ⏱️ **Flexible durations** - Customize study, short break, and long break times
+- 🔄 **Auto-start option** - Automatically begin the next phase or pause for manual control
+- 💾 **Persistent state** - Timer survives page refreshes and OBS reloads
+- 🎨 **Glassmorphism UI** - Modern design with optional transparent mode
+- 🔗 **URL parameters** - Pre-configure everything via URL
+- 📋 **One-click OBS URL** - Generate and copy your overlay URL instantly
+
+---
+
+## 🎮 Quick Start for OBS
+
+### Step 1: Add Browser Source
+
+1. In OBS, click **+** under Sources
+2. Select **Browser**
+3. Name it "Pomodoro Timer"
+
+### Step 2: Configure the Source
+
+| Setting | Value |
+|---------|-------|
+| **URL** | `https://bskasan.github.io/pomodoro-obs-overlay/?mode=overlay` |
+| **Width** | `600` |
+| **Height** | `200` |
+| **Custom CSS** | *(leave empty)* |
+
+### Step 3: Important Settings
+
+- ✅ **Uncheck** "Shutdown source when not visible"
+- ✅ **Uncheck** "Refresh browser when scene becomes active"
+
+### Step 4: Control Your Timer
+
+Open the full UI in your browser to control the timer:
+```
+https://bskasan.github.io/pomodoro-obs-overlay/
+```
+
+The overlay in OBS will automatically sync!
+
+---
+
+## 🎛️ URL Parameters
+
+Customize your overlay by adding parameters to the URL:
+
+| Parameter | Description | Default | Range |
+|-----------|-------------|---------|-------|
+| `mode` | Set to `overlay` for timer-only view | full | `overlay` |
+| `sessions` | Total study sessions | 4 | 1-20 |
+| `study` | Study duration (minutes) | 25 | 1-300 |
+| `short` | Short break duration (minutes) | 5 | 1-300 |
+| `long` | Long break duration (minutes) | 15 | 1-300 |
+| `longEvery` | Long break frequency | 4 | 1-10 |
+| `auto` | Auto-start next phase | 1 | `1` or `0` |
+| `glass` | Glass background effect | 1 | `1` or `0` |
+
+### Example URLs
+
+**50-minute study sessions with 10-minute breaks:**
+```
+?mode=overlay&study=50&short=10&long=20
+```
+
+**6 sessions, no glass effect:**
+```
+?mode=overlay&sessions=6&glass=0
+```
+
+**Manual mode (pause between phases):**
+```
+?mode=overlay&auto=0
+```
+
+---
+
+## 🎨 Phase Colors
+
+The overlay changes color based on the current phase:
+
+| Phase | Color | Hex |
+|-------|-------|-----|
+| 📚 Study | Cyan | `#00D9FF` |
+| ☕ Short Break | Green | `#4ADE80` |
+| 🌴 Long Break | Orange | `#FB923C` |
+| ✅ Completed | Purple | `#A78BFA` |
+
+---
+
+## 📐 Recommended Sizes
+
+| Size | Dimensions | Use Case |
+|------|------------|----------|
+| **Compact** | 400 x 160 | Corner placement |
+| **Standard** | 600 x 200 | Prominent display |
+| **Large** | 800 x 250 | Full-width bars |
+
+---
+
+## 🖥️ Running Locally
+
+If you want to run this locally instead of using GitHub Pages:
+
+### Using Python
 ```bash
 python -m http.server 8000
 ```
 
-Using Node.js:
+### Using Node.js
 ```bash
 npx serve .
 ```
 
 Then open `http://localhost:8000` in your browser.
 
-## OBS Setup
+---
 
-1. Add a **Browser Source** in OBS
-2. Set the URL to: `http://localhost:8000/?mode=overlay`
-3. Set dimensions: **400x160** (compact) or **600x200** (standard)
-4. Uncheck **"Shutdown source when not visible"**
-5. Uncheck **"Refresh browser when scene becomes active"**
-6. The transparent background will work automatically
+## 💾 Data Persistence
 
-## URL Parameters
+Your settings and timer state are saved in your browser's localStorage:
 
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `mode` | `overlay` | Hides settings and controls, shows only the timer |
-
-## Keyboard Workflow
-
-1. Open the full UI (`http://localhost:8000`) to configure settings
-2. The overlay in OBS (`http://localhost:8000/?mode=overlay`) will reflect the same state
-3. Control the timer from the full UI - the overlay updates in real-time
-
-## Phase Colors
-
-- **Study**: Cyan (#00D9FF)
-- **Short Break**: Green (#4ADE80)
-- **Long Break**: Orange (#FB923C)
-- **Completed**: Purple (#A78BFA)
-
-## Data Persistence
-
-Settings and timer state are saved to localStorage:
 - `pomodoro_settings` - Your configuration
-- `pomodoro_timer_state` - Current timer state
+- `pomodoro_timer_state` - Current timer state (phase, time remaining, etc.)
 
-Use the "Reset All Data" button to clear everything.
+**Note:** Each browser/device has its own localStorage. The control panel and OBS overlay share data only when using the same browser on the same device.
+
+---
+
+## 🛠️ Self-Hosting
+
+Want to host your own copy?
+
+1. **Fork** this repository
+2. Go to **Settings** → **Pages**
+3. Set source to `main` branch
+4. Your overlay will be live at `https://bskasan.github.io/REPO-NAME/`
+
+---
+
+## 📄 License
+
+MIT License - Feel free to use, modify, and share!
+
+---
+
+## 🙏 Credits
+
+Built with vanilla HTML, CSS, and JavaScript. No frameworks, no dependencies.
+
+**Made for streamers, by streamers.** 🎬

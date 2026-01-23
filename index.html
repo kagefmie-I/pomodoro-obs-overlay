@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Timer - OBS Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Overlay Display - Always visible -->
+    <section class="overlay-display" id="overlayDisplay">
+      <div class="overlay-content">
+        <div class="phase-label" id="phaseLabel">STUDY</div>
+        <div class="session-counter" id="sessionCounter">Session 1/4</div>
+        <div class="timer-display" id="timerDisplay">25:00</div>
+      </div>
+    </section>
+
+    <!-- Compact Icon Controls - Hidden in overlay mode -->
+    <div class="icon-controls" id="iconControls">
+      <button class="icon-btn icon-btn-primary" id="startPauseBtn" title="Start/Pause">
+        <span class="icon-btn-icon" id="startPauseIcon">▶</span>
+      </button>
+      <button class="icon-btn" id="resetBtn" title="Reset">
+        <span class="icon-btn-icon">↺</span>
+      </button>
+      <button class="icon-btn" id="settingsBtn" title="Settings">
+        <span class="icon-btn-icon">⚙</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="settingsModal">
+      <div class="modal-header">
+        <h2 class="modal-title">Settings</h2>
+        <button class="modal-close" id="modalCloseBtn" title="Close">✕</button>
+      </div>
+      
+      <nav class="modal-tabs">
+        <button class="tab-btn active" data-tab="timer">Timer</button>
+        <button class="tab-btn" data-tab="behavior">Behavior</button>
+        <button class="tab-btn" data-tab="obs">OBS</button>
+      </nav>
+
+      <div class="modal-content">
+        <!-- Tab 1: Timer Settings -->
+        <div class="tab-panel active" id="tab-timer">
+          <div class="settings-grid">
+            <div class="setting-group">
+              <label for="totalSessions">Total Sessions</label>
+              <input type="number" id="totalSessions" min="1" max="20" value="4">
+            </div>
+            <div class="setting-group">
+              <label for="studyDuration">Study Duration (min)</label>
+              <input type="number" id="studyDuration" min="1" max="300" value="25">
+            </div>
+            <div class="setting-group">
+              <label for="shortBreakDuration">Short Break (min)</label>
+              <input type="number" id="shortBreakDuration" min="1" max="300" value="5">
+            </div>
+            <div class="setting-group">
+              <label for="longBreakDuration">Long Break (min)</label>
+              <input type="number" id="longBreakDuration" min="1" max="300" value="15">
+            </div>
+            <div class="setting-group full-width">
+              <label for="longBreakEvery">Long Break Every</label>
+              <div class="input-suffix">
+                <input type="number" id="longBreakEvery" min="1" max="10" value="4">
+                <span>sessions</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Behavior -->
+        <div class="tab-panel" id="tab-behavior">
+          <div class="settings-toggles">
+            <label class="toggle-setting">
+              <input type="checkbox" id="autoStartNextPhase" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Auto-start next phase</span>
+            </label>
+            <label class="toggle-setting">
+              <input type="checkbox" id="glassEnabled" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Glass background</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Tab 3: OBS + Advanced -->
+        <div class="tab-panel" id="tab-obs">
+          <div class="obs-section">
+            <h3 class="section-label">OBS Browser Source URL</h3>
+            <div class="obs-url-field">
+              <input type="text" id="obsUrlPreview" readonly placeholder="Generated URL">
+              <button class="btn btn-copy" id="copyObsUrlBtn">
+                <span id="copyBtnText">Copy</span>
+              </button>
+            </div>
+            <p class="obs-url-hint">Paste this URL into OBS Browser Source</p>
+          </div>
+
+          <div class="advanced-section">
+            <h3 class="section-label">Phase Controls</h3>
+            <div class="action-buttons">
+              <button class="btn btn-ghost" id="restartPhaseBtn">Restart Phase</button>
+              <button class="btn btn-ghost" id="skipPhaseBtn">Skip Phase</button>
+            </div>
+          </div>
+
+          <div class="danger-section">
+            <h3 class="section-label">Danger Zone</h3>
+            <button class="btn btn-danger" id="resetAllBtn">Reset All Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

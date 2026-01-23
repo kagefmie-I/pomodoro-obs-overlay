@@ -9,7 +9,8 @@
 
 const STORAGE_KEYS = {
   SETTINGS: 'pomodoro_settings',
-  TIMER_STATE: 'pomodoro_timer_state'
+  TIMER_STATE: 'pomodoro_timer_state',
+  START_ON_LOAD_PREF: 'pomodoro_start_on_load_pref'
 };
 
 const PHASE = {
@@ -111,7 +112,8 @@ const elements = {
   // OBS URL
   obsUrlPreview: document.getElementById('obsUrlPreview'),
   copyObsUrlBtn: document.getElementById('copyObsUrlBtn'),
-  copyBtnText: document.getElementById('copyBtnText')
+  copyBtnText: document.getElementById('copyBtnText'),
+  startOnLoadToggle: document.getElementById('startOnLoadToggle')
 };
 
 // ========================================
@@ -833,6 +835,16 @@ function setupEventListeners() {
     elements.copyObsUrlBtn.addEventListener('click', copyObsUrl);
   }
   
+  // Start on load toggle (for OBS URL generator)
+  if (elements.startOnLoadToggle) {
+    elements.startOnLoadToggle.addEventListener('change', (e) => {
+      try {
+        localStorage.setItem(STORAGE_KEYS.START_ON_LOAD_PREF, e.target.checked);
+      } catch (err) {}
+      updateObsUrlPreview();
+    });
+  }
+  
   // Reset all button
   if (elements.resetAllBtn) {
     elements.resetAllBtn.addEventListener('click', () => {
@@ -946,6 +958,11 @@ function generateObsUrl() {
   params.set('auto', settings.autoStartNextPhase ? '1' : '0');
   params.set('glass', settings.glassEnabled ? '1' : '0');
   
+  // Add start=1 if toggle is checked
+  if (elements.startOnLoadToggle?.checked) {
+    params.set('start', '1');
+  }
+  
   return `${baseUrl}?${params.toString()}`;
 }
 
@@ -1036,6 +1053,27 @@ function resumeFromSavedState() {
 }
 
 // ========================================
+// Auto-Start on Load (URL parameter)
+// ========================================
+
+function handleAutoStartOnLoad(isOverlay) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const startParam = urlParams.get('start');
+  
+  // Only auto-start if:
+  // 1. mode=overlay AND start=1/true
+  // 2. timer is not already running (from resume)
+  // 3. phase is not FINISHED
+  if (isOverlay && 
+      (startParam === '1' || startParam?.toLowerCase() === 'true') &&
+      !timerState.isRunning &&
+      timerState.phase !== PHASE.FINISHED) {
+    console.log('Auto-starting timer via start= URL parameter');
+    startTimer();
+  }
+}
+
+// ========================================
 // Initialization
 // ========================================
 
@@ -1046,6 +1084,15 @@ function init() {
   parseUrlParams(); // This may reset timer state if settings changed
   loadTimerState(); // Load after URL params are applied
   resumeFromSavedState();
+  handleAutoStartOnLoad(isOverlay); // Auto-start if start=1 URL param (after resume so it doesn't override saved running state)
+  
+  // Load start-on-load preference for OBS URL generator
+  if (elements.startOnLoadToggle) {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.START_ON_LOAD_PREF);
+      elements.startOnLoadToggle.checked = saved === 'true';
+    } catch (e) {}
+  }
   
   updateSettingsUI();
   updateTimerDisplay();

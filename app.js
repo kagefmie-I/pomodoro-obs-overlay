@@ -113,7 +113,14 @@ const elements = {
   obsUrlPreview: document.getElementById('obsUrlPreview'),
   copyObsUrlBtn: document.getElementById('copyObsUrlBtn'),
   copyBtnText: document.getElementById('copyBtnText'),
-  startOnLoadToggle: document.getElementById('startOnLoadToggle')
+  startOnLoadToggle: document.getElementById('startOnLoadToggle'),
+  
+  // Overlay Controls
+  overlayControls: document.getElementById('overlayControls'),
+  overlayPlayPauseBtn: document.getElementById('overlayPlayPauseBtn'),
+  overlayPlayPauseIcon: document.getElementById('overlayPlayPauseIcon'),
+  overlayStopBtn: document.getElementById('overlayStopBtn'),
+  overlayRestartBtn: document.getElementById('overlayRestartBtn')
 };
 
 // ========================================
@@ -491,6 +498,17 @@ function updateTimerDisplay() {
     }
   }
   
+  // Update overlay play/pause button icon
+  if (elements.overlayPlayPauseIcon) {
+    if (timerState.phase === PHASE.FINISHED) {
+      elements.overlayPlayPauseIcon.textContent = '↺';
+    } else if (timerState.isRunning) {
+      elements.overlayPlayPauseIcon.textContent = '⏸';
+    } else {
+      elements.overlayPlayPauseIcon.textContent = '▶';
+    }
+  }
+  
   // Update primary button style based on phase
   if (elements.startPauseBtn) {
     elements.startPauseBtn.classList.toggle('icon-btn-primary', !timerState.isRunning || timerState.phase === PHASE.FINISHED);
@@ -792,6 +810,19 @@ function setupEventListeners() {
   
   if (elements.settingsBtn) {
     elements.settingsBtn.addEventListener('click', openModal);
+  }
+  
+  // Overlay control buttons
+  if (elements.overlayPlayPauseBtn) {
+    elements.overlayPlayPauseBtn.addEventListener('click', toggleTimer);
+  }
+  
+  if (elements.overlayStopBtn) {
+    elements.overlayStopBtn.addEventListener('click', stopTimer);
+  }
+  
+  if (elements.overlayRestartBtn) {
+    elements.overlayRestartBtn.addEventListener('click', restartCurrentPhase);
   }
   
   // Modal controls

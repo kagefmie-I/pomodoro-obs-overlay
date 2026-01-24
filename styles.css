@@ -630,6 +630,61 @@ body {
 }
 
 /* ========================================
+   Overlay Controls (for overlay mode)
+   ======================================== */
+
+.overlay-controls {
+  display: none;
+  gap: var(--spacing-sm);
+  justify-content: center;
+  margin-top: var(--spacing-sm);
+}
+
+.overlay-ctrl-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.overlay-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--color-text);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.overlay-ctrl-btn:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Glass-off mode for overlay controls */
+.overlay-display.glass-off .overlay-ctrl-btn {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.overlay-display.glass-off .overlay-ctrl-btn:hover {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ========================================
    Overlay Mode
    ======================================== */
 
@@ -646,6 +701,10 @@ body.overlay-mode .app-container {
 body.overlay-mode .icon-controls,
 body.overlay-mode .modal-backdrop {
   display: none;
+}
+
+body.overlay-mode .overlay-controls {
+  display: flex;
 }
 
 body.overlay-mode .overlay-display {

@@ -2,14 +2,13 @@
 
 A sleek, lightweight Pomodoro timer designed as an OBS Browser Source overlay for Twitch/YouTube streamers. Features a modern glassmorphism design, persistent state, and easy customization via URL parameters.
 
-<!-- Replace with your actual GitHub Pages URL -->
 ## 🚀 Live Demo
 
 **Full UI (Control Panel):**  
-`https://bskasan.github.io/pomodoro-obs-overlay/`
+`https://bskasan.github.io/pomodoro-obs-overlay-/`
 
 **OBS Overlay (Timer Only):**  
-`https://bskasan.github.io/pomodoro-obs-overlay/?mode=overlay`
+`https://bskasan.github.io/pomodoro-obs-overlay-/?mode=overlay`
 
 ---
 
@@ -21,7 +20,7 @@ A sleek, lightweight Pomodoro timer designed as an OBS Browser Source overlay fo
 - 💾 **Persistent state** - Timer survives page refreshes and OBS reloads
 - 🎨 **Glassmorphism UI** - Modern design with optional transparent mode
 - 🔗 **URL parameters** - Pre-configure everything via URL
-- 📋 **One-click OBS URL** - Generate and copy your overlay URL instantly
+- 🎮 **Overlay controls** - Play/Pause, Stop, and Restart buttons directly in the overlay
 
 ---
 
@@ -37,10 +36,9 @@ A sleek, lightweight Pomodoro timer designed as an OBS Browser Source overlay fo
 
 | Setting | Value |
 |---------|-------|
-| **URL** | `https://bskasan.github.io/pomodoro-obs-overlay/?mode=overlay` |
+| **URL** | `https://bskasan.github.io/pomodoro-obs-overlay-/?mode=overlay` |
 | **Width** | `600` |
 | **Height** | `200` |
-| **Custom CSS** | *(leave empty)* |
 
 ### Step 3: Important Settings
 
@@ -49,18 +47,17 @@ A sleek, lightweight Pomodoro timer designed as an OBS Browser Source overlay fo
 
 ### Step 4: Control Your Timer
 
-Open the full UI in your browser to control the timer:
-```
-https://bskasan.github.io/pomodoro-obs-overlay/
-```
+**Option A: Use OBS Interact (Recommended)**
+1. Right-click your Pomodoro Browser Source
+2. Select **Interact**
+3. Click the overlay controls: ▶ (Play/Pause), ⏹ (Stop), ↺ (Restart)
 
-The overlay in OBS will automatically sync!
+**Option B: Use the Control Panel**  
+Open the full UI in your browser — the overlay in OBS will automatically sync!
 
 ---
 
 ## 🎛️ URL Parameters
-
-Customize your overlay by adding parameters to the URL:
 
 | Parameter | Description | Default | Range |
 |-----------|-------------|---------|-------|
@@ -72,68 +69,25 @@ Customize your overlay by adding parameters to the URL:
 | `longEvery` | Long break frequency | 4 | 1-10 |
 | `auto` | Auto-start next phase | 1 | `1` or `0` |
 | `glass` | Glass background effect | 1 | `1` or `0` |
+| `start` | Auto-start timer on page load | 0 | `1` or `0` |
 
 ### Example URLs
 
-**50-minute study sessions with 10-minute breaks:**
 ```
-?mode=overlay&study=50&short=10&long=20
+?mode=overlay&study=50&short=10&long=20    # 50-min sessions
+?mode=overlay&sessions=6&glass=0            # 6 sessions, no glass
+?mode=overlay&auto=0                        # Manual mode
+?mode=overlay&start=1                       # Auto-start on load
 ```
-
-**6 sessions, no glass effect:**
-```
-?mode=overlay&sessions=6&glass=0
-```
-
-**Manual mode (pause between phases):**
-```
-?mode=overlay&auto=0
-```
-
----
-
-## 🎨 Phase Colors
-
-The overlay changes color based on the current phase:
-
-| Phase | Color | Hex |
-|-------|-------|-----|
-| 📚 Study | Cyan | `#00D9FF` |
-| ☕ Short Break | Green | `#4ADE80` |
-| 🌴 Long Break | Orange | `#FB923C` |
-| ✅ Completed | Purple | `#A78BFA` |
-
----
-
-## 📐 Recommended Sizes
-
-| Size | Dimensions | Use Case |
-|------|------------|----------|
-| **Compact** | 400 x 160 | Corner placement |
-| **Standard** | 600 x 200 | Prominent display |
-| **Large** | 800 x 250 | Full-width bars |
-
----
-
-## 💾 Data Persistence
-
-Your settings and timer state are saved in your browser's localStorage:
-
-- `pomodoro_settings` - Your configuration
-- `pomodoro_timer_state` - Current timer state (phase, time remaining, etc.)
-
-**Note:** Each browser/device has its own localStorage. The control panel and OBS overlay share data only when using the same browser on the same device.
 
 ---
 
 ## 🛠️ Self-Hosting
 
-Want to host your own copy?
-
 1. **Fork** this repository
 2. Go to **Settings** → **Pages**
 3. Set source to `main` branch
-4. Your overlay will be live at `https://bskasan.github.io/REPO-NAME/`
+4. Your overlay will be live at `https://YOUR-USERNAME.github.io/pomodoro-obs-overlay-/`
 
 ---
 
@@ -142,8 +96,6 @@ Want to host your own copy?
 MIT License - Feel free to use, modify, and share!
 
 ---
-
-## 🙏 Credits
 
 Built with vanilla HTML, CSS, and JavaScript. No frameworks, no dependencies.
 

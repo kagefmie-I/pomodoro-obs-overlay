@@ -704,7 +704,8 @@ body.overlay-mode .modal-backdrop {
 }
 
 body.overlay-mode .overlay-controls {
-  display: flex;
+  display: flex !important;
+  pointer-events: auto;
 }
 
 body.overlay-mode .overlay-display {
@@ -758,6 +759,17 @@ body.overlay-mode .overlay-display {
   .timer-display {
     font-size: 2.5rem;
   }
+  
+  .overlay-controls {
+    margin-top: var(--spacing-xs);
+    gap: var(--spacing-xs);
+  }
+  
+  .overlay-ctrl-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
 }
 
 /* Ultra compact */
@@ -773,5 +785,15 @@ body.overlay-mode .overlay-display {
   
   .phase-label {
     font-size: 0.6875rem;
+  }
+  
+  .overlay-controls {
+    margin-top: 2px;
+  }
+  
+  .overlay-ctrl-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 0.625rem;
   }
 }

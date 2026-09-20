@@ -105,7 +105,7 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 6px;
   background: var(--phase-color);
   transition: background 0.3s ease;
 }

@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pomodoro Timer - OBS Overlay</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
   <div class="app-container">
     <!-- Overlay Display - Always visible -->
     <section class="overlay-display" id="overlayDisplay">
       <div class="overlay-content">
-        <div class="phase-label" id="phaseLabel">STUDY</div>
+        <div class="phase-label" id="phaseLabel">WORK</div>
         <div class="session-counter" id="sessionCounter">Session 1/4</div>
         <div class="timer-display" id="timerDisplay">25:00</div>
         <!-- Overlay Controls - Only visible in overlay mode -->
@@ -53,7 +57,7 @@
         <h2 class="modal-title">Settings</h2>
         <button class="modal-close" id="modalCloseBtn" title="Close">✕</button>
       </div>
-      
+
       <nav class="modal-tabs">
         <button class="tab-btn active" data-tab="timer">Timer</button>
         <button class="tab-btn" data-tab="behavior">Behavior</button>
@@ -69,8 +73,8 @@
               <input type="number" id="totalSessions" min="1" max="20" value="4">
             </div>
             <div class="setting-group">
-              <label for="studyDuration">Study Duration (min)</label>
-              <input type="number" id="studyDuration" min="1" max="300" value="25">
+              <label for="WORKDuration">WORK Duration (min)</label>
+              <input type="number" id="WORKDuration" min="1" max="300" value="25">
             </div>
             <div class="setting-group">
               <label for="shortBreakDuration">Short Break (min)</label>
@@ -143,4 +147,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>

@@ -492,7 +492,7 @@ function updateTimerDisplay() {
     if (timerState.phase === PHASE.FINISHED) {
       elements.startPauseIcon.textContent = '↺';
     } else if (timerState.isRunning) {
-      elements.startPauseIcon.textContent = '⏸';
+      elements.startPauseIcon.textContent = 'II';
     } else {
       elements.startPauseIcon.textContent = '▶';
     }
